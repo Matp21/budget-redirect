@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-0KEpWRtepLfZGQFV3XslVNXMVc5TD8lbnDkcCxFzzTs='; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Budget</title>
+<style>
+:root { color-scheme: light dark; --bg: #f5f5f4; --fg: #1c1917; --muted: #57534e; --accent: #2563eb; --accent-fg: #ffffff; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1c1917; --fg: #f5f5f4; --muted: #a8a29e; --accent: #60a5fa; --accent-fg: #1c1917; }
+}
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+body { min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 16px; box-sizing: border-box; }
+main { max-width: 360px; width: 100%; text-align: center; }
+p { margin: 0 0 20px; font-size: 1.05rem; line-height: 1.5; }
+a.button { display: inline-block; padding: 12px 20px; border-radius: 8px; background: var(--accent); color: var(--accent-fg); text-decoration: none; font-weight: 600; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <p id="message">Retour vers l'application…</p>
+  <a id="open" class="button" href="budgetperso://callback" hidden>Retourner dans Budget</a>
+</main>
+<script>
+(function () {
+  'use strict';
+  var DEEP_LINK = 'budgetperso://callback';
+  var MAX_VALUE_LENGTH = 2048;
+  var ALLOWED_KEYS = ['code', 'state', 'error', 'error_description'];
+
+  var message = document.getElementById('message');
+  var openLink = document.getElementById('open');
+
+  var incoming = new URLSearchParams(location.search);
+  var kept = new URLSearchParams();
+  ALLOWED_KEYS.forEach(function (key) {
+    var value = incoming.get(key);
+    if (value !== null && value.length > 0) {
+      kept.append(key, value.slice(0, MAX_VALUE_LENGTH));
+    }
+  });
+
+  // Remove the query from history so the code does not stay in it.
+  history.replaceState(null, '', location.pathname);
+
+  if (kept.toString() === '') {
+    message.textContent = 'Lien invalide';
+    return;
+  }
+
+  var target = DEEP_LINK + '?' + kept.toString();
+  openLink.setAttribute('href', target);
+  openLink.hidden = false;
+
+  if (kept.has('error')) {
+    message.textContent = "L'autorisation a été annulée ou a échoué. Vous pouvez fermer cette page.";
+  }
+
+  location.replace(target);
+})();
+</script>
+</body>
+</html>
